@@ -1,11 +1,9 @@
-# nanoQC
-A quality control workflow implemented in Snakemake to assemble Nanopore (long read) data.
+# nanofunQC
+A quality control workflow implemented in Snakemake to assemble Nanopore (long read) data for Candida auris. It is a modified version of nanoQC (https://github.com/Snitkin-Lab-Umich/nanoQC).
 
 ## Summary
 
-As part of the [Data Flow SOP](https://github.com/Snitkin-Lab-Umich/Data-Flow-SOP) in the [Snitkin lab](https://thesnitkinlab.com/index.php), this pipeline should be run on raw sequencing data as soon as it is available from [Plasmidsaurus](https://www.plasmidsaurus.com/). <!--sequencing core-->
-
-In short, it performs the following steps:
+This pipeline performs the following steps:
 
 - Runs [Filtlong](https://github.com/rrwick/Filtlong) to remove low quality reads and discards reads less than 1000 Bp.
 - Generates pre and post-Filtlong QC plots using [Nanoplot](https://github.com/wdecoster/NanoPlot).
@@ -14,40 +12,22 @@ In short, it performs the following steps:
 - The medaka assembly is then passed through [Prokka](https://github.com/tseemann/prokka) for annotation, [skani](https://github.com/bluenote-1577/skani) to identify closest reference genome, and [MLST](https://github.com/tseemann/mlst) for determining sequence type based on sequences of housekeeping genes
 - Flye and medaka assemblies are then run on [BUSCO](https://busco.ezlab.org/) for assembly completeness statistics and [QUAST](https://quast.sourceforge.net/) for assembly statistics.
 
-The workflow generates all the output in the `prefix` folder set in  `config/config.yaml`. Each workflow steps gets its own individual folder as shown below. This structure provides a general view of how outputs are organized, with each tool or workflow step having its own directory. **Note that this overview does not capture all possible outputs from each tool; it only highlights the primary directories and their contents.** 
+The output from each step is contained in its own folder, as shown below. 
 
 ```
-results/2024-05-01_Project_IMPALA_nanoQC/
-├── 2024-05-01_Project_IMPALA_nanoQC_report
-|   ├── 2024-05-01_Project_IMPALA_nanoQC_report.csv
-|   └── 2024-08-26_Lojek_G6C_rerun_nanoQC_Skani_report_final.csv
-├── busco
-|   ├── Lojek_R5G_1
-|   └── Lojek_R5G_2
-├── filtlong
-|   ├── Lojek_R5G_1
-|   └── Lojek_R5G_2
-├── flye
-|   ├── Lojek_R5G_1
-|   └── Lojek_R5G_2
-├── medaka
-|   ├── Lojek_R5G_1
-|   └── Lojek_R5G_2
-├── mlst
-|   ├── Lojek_R5G_1
-|   └── Lojek_R5G_2
-├── nanoplot
-|   ├── Lojek_R5G_1
-|   └── Lojek_R5G_2
-├── prokka
-|   ├── Lojek_R5G_1
-|   └── Lojek_R5G_2
-├── quast
-|   ├── Lojek_R5G_1
-|   └── Lojek_R5G_2
-└── skani
-    ├── Lojek_R5G_1
-    └── Lojek_R5G_2
+results
+└── run_name
+    ├── busco
+    ├── filtlong
+	├── flye
+	├── medaka
+	├── nanoplot
+	├── quast
+	├── repeatmasker
+	└── funannotate
+		└──sample_name
+			├── interproscan
+			└── eggnog
 ```
 
 
@@ -61,15 +41,7 @@ git clone https://github.com/Snitkin-Lab-Umich/nanoQC.git
 
 ```
 
-> Ensure you have successfully cloned `nanoQC`. Type `ls` and you should see the newly created directory **nanoQC**. Move to the newly created directory.
-
-```
-
-cd nanoQC
-
-```
-
-> Load bioinformatics, snakemake and singularity modules from Great Lakes modules.
+> Download the GeneMark license and place it in your home directory, if you haven't already.
 
 ```
 
