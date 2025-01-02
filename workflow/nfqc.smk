@@ -1,4 +1,4 @@
-# Author: Ali Pirani and Dhatri Badri 
+# Author: Ali Pirani, Dhatri Badri, and Joseph Hale 
 configfile: "config/config.yaml"
 
 import pandas as pd
@@ -39,7 +39,8 @@ rule all:
         interproscan = expand("results/{prefix}/funannotate/{sample}/interproscan/{sample}.proteins.fa.xml", sample=SAMPLE, prefix=PREFIX),
         eggnog = expand("results/{prefix}/funannotate/{sample}/eggnog/{sample}.emapper.annotations", sample=SAMPLE, prefix=PREFIX),
         funannotate_annotate = expand("results/{prefix}/funannotate/{sample}/annotate_results/{sample}.proteins.fa", sample=SAMPLE, prefix=PREFIX),
-        busco_final = expand("results/{prefix}/busco/busco_output/batch_summary.txt", prefix = PREFIX)
+        busco_final = expand("results/{prefix}/busco/busco_output_prot/batch_summary.txt", prefix = PREFIX),
+        multiqc_out = expand("results/{prefix}/multiqc/{prefix}_QC_report.html", prefix=PREFIX),
 
         
 rule filtlong:
@@ -148,7 +149,7 @@ rule medaka:
         medaka_out = "results/{prefix}/medaka/{sample}/{sample}_medaka.fasta",
     params:
         medaka_out_dir = "results/{prefix}/medaka/{sample}",
-        threads = config["threads"],
+        #threads = config["threads"],
         sample = "{sample}",
     #log:
     #    "logs/{prefix}/medaka/{sample}/{sample}.log"
@@ -342,7 +343,7 @@ rule funannotate_train:
     threads: 8
     resources:
         mem_mb = 32000,
-        runtime = 500
+        runtime = 700
     singularity:
         "docker://nextgenusfs/funannotate:v1.8.17"
     shell:
@@ -456,7 +457,8 @@ rule funannotate_annotate:
         eggnog_out = "results/{prefix}/funannotate/{sample}/eggnog/{sample}.emapper.annotations",
         busco_db = config["funqcd_lib"] + "busco/lineages/saccharomycetes_odb10/dataset.cfg"
     output:
-        funannotate_annotate_proteins = "results/{prefix}/funannotate/{sample}/annotate_results/{sample}.proteins.fa"
+        funannotate_annotate_proteins = "results/{prefix}/funannotate/{sample}/annotate_results/{sample}.proteins.fa",
+        funannotate_annotate_assembly = "results/{prefix}/funannotate/{sample}/annotate_results/{sample}.scaffolds.fa",
     params:
         out_dir = "results/{prefix}/funannotate/{sample}/",
         sample = "{sample}",
@@ -476,9 +478,11 @@ rule funannotate_annotate:
 # The line 'rm -rf RM_*' removes the directories that RepeatMasker generates in the working directory
 rule busco_final:
     input:
-        funannotate_annotate_proteins = expand("results/{prefix}/funannotate/{sample}/annotate_results/{sample}.proteins.fa", prefix = PREFIX, sample = SAMPLE)
+        funannotate_annotate_proteins = expand("results/{prefix}/funannotate/{sample}/annotate_results/{sample}.proteins.fa", prefix = PREFIX, sample = SAMPLE),
+        funannotate_annotate_nucleotides = expand("results/{prefix}/funannotate/{sample}/annotate_results/{sample}.scaffolds.fa", prefix = PREFIX, sample = SAMPLE),       
     output:
-        busco_out = "results/{prefix}/busco/busco_output/batch_summary.txt"
+        busco_out_p = "results/{prefix}/busco/busco_output_prot/batch_summary.txt",
+        busco_out_n = "results/{prefix}/busco/busco_output_nucl/batch_summary.txt",
     params:
         prefix = "{prefix}",
         busco_db = config["funqcd_lib"] + "busco/"
@@ -490,9 +494,52 @@ rule busco_final:
         "docker://ezlabgva/busco:v5.7.0_cv1"
     shell:
         """
-        mkdir -p results/{params.prefix}/busco/input/
-        cp results/{params.prefix}/funannotate/*/annotate_results/*.proteins.fa results/{params.prefix}/busco/input/
-        busco -f --in results/{params.prefix}/busco/input/ --mode protein --lineage_dataset saccharomycetes_odb10 --out_path results/{params.prefix}/busco/ -c {threads} --out busco_output --offline --download_path {params.busco_db}
+        mkdir -p results/{params.prefix}/busco/input/prot/
+        mkdir -p results/{params.prefix}/busco/input/nucl/
+        cp results/{params.prefix}/funannotate/*/annotate_results/*.proteins.fa results/{params.prefix}/busco/input/prot
+        cp results/{params.prefix}/funannotate/*/annotate_results/*.scaffolds.fa results/{params.prefix}/busco/input/nucl
+        busco -f --in results/{params.prefix}/busco/input/prot --mode protein --lineage_dataset saccharomycetes_odb10 --out_path results/{params.prefix}/busco/ -c {threads} --out busco_output_prot --offline --download_path {params.busco_db}
+        busco -f --in results/{params.prefix}/busco/input/nucl --mode genome --lineage_dataset saccharomycetes_odb10 --out_path results/{params.prefix}/busco/ -c {threads} --out busco_output_nucl --offline --download_path {params.busco_db}
         rm -rf RM_*
         """
+
+rule multiqc:
+    input:
+        quast_out_flye = expand("results/{prefix}/quast/{sample}/{sample}_flye/report.txt",prefix=PREFIX, sample=SAMPLE),
+        quast_out_medaka = expand("results/{prefix}/quast/{sample}/{sample}_medaka/report.txt",prefix=PREFIX, sample=SAMPLE),
+        #quast_out = expand("results/{prefix}/quast/{sample}/{sample}_flye_medaka_polypolish/report.txt",prefix=PREFIX, sample=SAMPLE),
+        nanoplot_preqc = expand("results/{prefix}/nanoplot/{sample}/{sample}_preqcNanoPlot-report.html",prefix=PREFIX, sample=SAMPLE),
+        busco_out_p = "results/{prefix}/busco/busco_output_prot/batch_summary.txt",
+        busco_out_n = "results/{prefix}/busco/busco_output_nucl/batch_summary.txt",
+        #unicycler_annotation = "results/{prefix}/prokka/",
+    output:
+        multiqc_report = "results/{prefix}/multiqc/{prefix}_QC_report.html",
+    params:
+        outdir = "results/{prefix}/multiqc",
+        prefix = "{prefix}",
+        quast_dir = "results/{prefix}/quast/",
+        nanoplot_dir = "results/{prefix}/nanoplot/",
+        busco_n_dir = "results/{prefix}/busco/busco_output_nucl/",
+        busco_p_dir = "results/{prefix}/busco/busco_output_prot/",
+        #multiqc_out_dir = directory("results/{prefix}/multiqc/"),
+        #prokka_dir_out = directory("results/{prefix}/prokka"),
+        #quast_dir_out = directory("results/{prefix}/quast"),
+        #pycoqc_dir_out = directory("results/{prefix}/pycoqc"),
+        #busco_dir_out = directory("results/{prefix}/busco"),
+        #threads = config["ncores"],
+    #priority: 100000    
+    # conda:
+    #     "envs/multiqc.yaml"
+    resources:
+        mem_mb = 1000,
+        runtime = 20
+    threads: 1
+    singularity:
+        "docker://multiqc/multiqc:v1.25.1"
+    shell:
+        """
+        multiqc -f --outdir {params.outdir} -n {params.prefix}_QC_report -i {params.prefix}_QC_report \
+        {params.quast_dir} {params.busco_n_dir} {params.busco_p_dir} {params.nanoplot_dir}
+        """
+
 
