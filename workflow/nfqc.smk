@@ -41,6 +41,8 @@ rule all:
         funannotate_annotate = expand("results/{prefix}/funannotate/{sample}/annotate_results/{sample}.proteins.fa", sample=SAMPLE, prefix=PREFIX),
         busco_final = expand("results/{prefix}/busco/busco_output_prot/batch_summary.txt", prefix = PREFIX),
         multiqc_out = expand("results/{prefix}/multiqc/{prefix}_QC_report.html", prefix=PREFIX),
+        auriclass_report = expand("results/{prefix}/auriclass/{sample}/{sample}_report.tsv", sample=SAMPLE, prefix=PREFIX),
+        qc_report_final = expand("results/{prefix}/multiqc/{prefix}_final_qc_summary.tsv", prefix = PREFIX),
 
         
 rule filtlong:
@@ -66,7 +68,8 @@ rule nanoplot:
         longreads = config["long_reads"] + "/{sample}.fastq.gz",
         trimmed = "results/{prefix}/filtlong/{sample}/{sample}.trimmed.fastq.gz",
     output:
-        nanoplot_preqc = "results/{prefix}/nanoplot/{sample}/{sample}_preqcNanoPlot-report.html"
+        nanoplot_preqc = "results/{prefix}/nanoplot/{sample}/{sample}_preqcNanoPlot-report.html",
+        nanoplot_postqc = "results/{prefix}/nanoplot/{sample}/{sample}_postqcNanoStats.txt",
     #log:
     #    "logs/{prefix}/nanoplot/{sample}/{sample}.log"
     params:
@@ -154,8 +157,8 @@ rule medaka:
     #log:
     #    "logs/{prefix}/medaka/{sample}/{sample}.log"
     singularity:
-        "docker://staphb/medaka:1.2.0"
-    threads: 8
+        "docker://staphb/medaka:2.0.1"
+    threads: 6
     resources:
         mem_mb = 15000,
         runtime = 30
@@ -165,7 +168,7 @@ rule medaka:
     #    "bcftools"
     shell:
         """
-        medaka_consensus -i {input.trimmed} -d {input.flye_assembly} -o {params.medaka_out_dir} -t {threads} -m r941_min_high_g303 &&
+        medaka_consensus -i {input.trimmed} -d {input.flye_assembly} -o {params.medaka_out_dir} -t {threads} &&
         cp {params.medaka_out_dir}/consensus.fasta {params.medaka_out_dir}/{params.sample}_medaka.fasta 
         """ 
         
@@ -277,6 +280,22 @@ rule quast:
 
 
 # copied from funQCD
+
+rule auriclass:
+    input:
+        medaka_out = "results/{prefix}/medaka/{sample}/{sample}_medaka.fasta",
+    output:
+        auriclass_report = "results/{prefix}/auriclass/{sample}/{sample}_report.tsv",
+    params: 
+        sample = "{sample}",
+    resources:
+        mem_mb = 5000,
+        runtime = 30
+    singularity:
+        "docker://quay.io/biocontainers/auriclass:0.5.4--pyhdfd78af_0"
+    shell:
+        "auriclass --name {params.sample} -o {output.auriclass_report} {input.medaka_out}"
+
 
 rule funannotate_sort:
     input:
@@ -488,8 +507,8 @@ rule busco_final:
         busco_db = config["funqcd_lib"] + "busco/"
     threads: 8
     resources:
-        mem_mb = 15000,
-        runtime = 45
+        mem_mb = 20000,
+        runtime = 600
     singularity:
         "docker://ezlabgva/busco:v5.7.0_cv1"
     shell:
@@ -532,7 +551,7 @@ rule multiqc:
     #     "envs/multiqc.yaml"
     resources:
         mem_mb = 1000,
-        runtime = 20
+        runtime = 120
     threads: 1
     singularity:
         "docker://multiqc/multiqc:v1.25.1"
@@ -542,4 +561,20 @@ rule multiqc:
         {params.quast_dir} {params.busco_n_dir} {params.busco_p_dir} {params.nanoplot_dir}
         """
 
-
+rule qc_report_final:
+    input:
+        multiqc_report = "results/{prefix}/multiqc/{prefix}_QC_report.html",
+        auriclass_report = expand("results/{prefix}/auriclass/{sample}/{sample}_report.tsv", sample = SAMPLE, prefix = PREFIX), 
+        nanostat_report = expand("results/{prefix}/nanoplot/{sample}/{sample}_postqcNanoStats.txt", sample = SAMPLE, prefix = PREFIX),
+    output:
+        summary_output = "results/{prefix}/multiqc/{prefix}_final_qc_summary.tsv"
+    params:
+        multiqc_dir = "results/{prefix}/multiqc/{prefix}_QC_report_data/",
+        auriclass_dir = "results/{prefix}/auriclass/", 
+        nanostat_dir = "results/{prefix}/nanoplot/",
+    resources:
+        mem_mb = 2000,
+        runtime = 60,
+    script:
+        "QC_summary.py"
+    
