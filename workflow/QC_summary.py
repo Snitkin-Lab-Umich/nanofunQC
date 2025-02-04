@@ -48,41 +48,32 @@ def make_summary_report(input_path, output_path, report, type = 'tsv'):
             _ = fhout.write('\t'.join([s] + input_dict[s]) + '\n')
 
 
-def final_qc_summary(multiqc_path,auriclass_path,nanostat_path):
-    # QC reports to combine:
-    # 'final coverage' table (at "results/{PREFIX}/{PREFIX}_Report/data/{PREFIX}_Final_Coverage.txt")
-    # this file is made via the coverage_report rule, which pulls from raw_coverage outputs
-    # this should now be handled by make_summary report
-    # fastqc before trimmomatic
-    # fastqc after trimmomatic
-    # quast
-    # contig distribution (this is covered by quast)
-    # busco (proteins and nucleotides)
-    # auriclass (this should be handled by make_summary_report)
+def make_flye_coverage_report(input_path,output_path):
+    # input path and output path should both be the flye directory in results/
+    input_path,output_path = [x+'/' if x[-1] != '/' else x for x in [input_path,output_path]]
+    # this is the path to the folder with each individual auriclass report
+    input_dict = {}
+    # input_dir is the sample name, such as 'UM_Caur_nano_1'
+    for input_dir in [x for x in os.listdir(input_path) if os.path.isdir(input_path + x)]:
+        for input_file in os.listdir(input_path + input_dir):
+            if input_file == 'assembly_info.txt':
+                fdata = pd.read_csv(input_path + input_dir + '/' + input_file, sep = '\t', header = 0)
+                percent_of_genome = fdata['length']/sum(fdata['length'])
+                average_coverage = sum(fdata['cov.'] * percent_of_genome)
+                input_dict[input_dir] = [str(round(average_coverage,2))]
+    with open(output_path + 'flye_coverage_summary.tsv','w') as fhout:
+        _ = fhout.write('Sample\taverage_coverage\n')
+        for s in input_dict:
+            _ = fhout.write('\t'.join([s] + input_dict[s]) + '\n')
+    
+
+def final_qc_summary(multiqc_path,auriclass_path,nanostat_path,flye_coverage_path):
 
     if multiqc_path[-1] != '/':
         multiqc_path+='/'
     #fastqc_path = multiqc_path + 'multiqc_fastqc.txt'
     quast_path = multiqc_path + 'multiqc_quast.txt'
     busco_path = multiqc_path + 'multiqc_busco.txt'
-
-    # load raw_coverage report
-    #data_raw_coverage = pd.read_csv(raw_coverage_path, sep = '\t', header = 0)
-
-    # # load fastqc report (multiqc_fastqc.txt)
-    # data_fastqc = pd.read_csv(fastqc_path, sep = '\t', header = 0)
-    # # fastqc for raw data
-    # data_raw_fastqc = data_fastqc.copy()[data_fastqc['Filename'].str.contains('_R1.fastq.gz')]
-    # # data_raw_fastqc['Sample'].replace('_R1','',regex=True, inplace=True)
-    # data_raw_fastqc['Sample'] = data_raw_fastqc['Sample'].replace('_R1','',regex=True)
-    # # fastqc after trimmomatic
-    # data_trim_fastqc = data_fastqc.copy()[data_fastqc['Sample'].str.contains('_R1_trim_paired')]
-    # data_trim_fastqc = data_trim_fastqc.drop(['Filename','File type','Encoding'],axis=1)
-    # # this removes redundant columns
-    # # data_trim_fastqc['Sample'].replace('_R1_trim_paired','',regex=True, inplace=True)
-    # data_trim_fastqc['Sample'] = data_trim_fastqc['Sample'].replace('_R1_trim_paired','',regex=True)
-    # data_trim_fastqc = data_trim_fastqc.add_prefix('after_trim_')
-    # data_trim_fastqc.rename(columns = {'after_trim_Sample':'Sample'}, inplace = True)
 
     # load quast report
     data_quast = pd.read_csv(quast_path, sep = '\t', header = 0)
@@ -118,13 +109,17 @@ def final_qc_summary(multiqc_path,auriclass_path,nanostat_path):
     # load nanostat report
     data_nanostat = pd.read_csv(nanostat_path, sep = '\t', header = 0)
 
+    # load coverage report
+    data_flye_coverage = pd.read_csv(flye_coverage_path, sep = '\t', header = 0)
+
     print(data_nanostat)
     print(data_quast)
     print(data_busco_merge)
     print(data_auriclass)
+    print(data_flye_coverage)
 
     # merge everything on the sample column
-    data_list = [data_nanostat, data_quast, data_busco_merge, data_auriclass]
+    data_list = [data_nanostat, data_quast, data_busco_merge, data_auriclass,data_flye_coverage]
     data_merge = reduce(lambda left,right: pd.merge(left,right,on='Sample',how='inner'), data_list)
     
     # choose which tests to use for fastqc 
@@ -139,7 +134,7 @@ def final_qc_summary(multiqc_path,auriclass_path,nanostat_path):
     return(data_merge)
 
 
-def qc_evaluate(input_df, n50_min, contig_number_max, contig_number_min, assembly_length_max, assembly_length_min, mean_read_length_min, mean_read_quality_min, busco_n_score_min):
+def qc_evaluate(input_df, n50_min, contig_number_max, contig_number_min, assembly_length_max, assembly_length_min, mean_read_length_min, mean_read_quality_min, busco_n_score_min, flye_coverage_min):
     qc_check = [
         input_df['N50'] < n50_min,
         input_df['# contigs (>= 0 bp)'] > contig_number_max,
@@ -151,6 +146,7 @@ def qc_evaluate(input_df, n50_min, contig_number_max, contig_number_min, assembl
         #input_df['coverage'] < average_coverage_min,
         #input_df['fastqc_tests_passed'] < fastqc_tests_passed_min,
         input_df['Percent Complete Nucleotide BUSCOs'] < busco_n_score_min,
+        input_df['average_coverage'] < flye_coverage_min,
     ]
     
     status = ['FAIL'] * len(qc_check)
@@ -159,19 +155,22 @@ def qc_evaluate(input_df, n50_min, contig_number_max, contig_number_min, assembl
     return(input_df)
 
 
-def main(multiqc_path, auriclass_path, nanostat_path, output_path, n50_min, contig_number_max, contig_number_min, assembly_length_max, assembly_length_min, mean_read_length_min, mean_read_quality_min, busco_n_score_min):
+def main(multiqc_path, auriclass_path, nanostat_path, flye_path, output_path, n50_min, contig_number_max, contig_number_min, assembly_length_max, assembly_length_min, mean_read_length_min, mean_read_quality_min, busco_n_score_min, flye_coverage_min):
     auriclass_path,nanostat_path = [x+'/' if x[-1] != '/' else x for x in [auriclass_path,nanostat_path]]
     # generate auriclass summary
     make_summary_report(input_path = auriclass_path, output_path = auriclass_path, report = 'auriclass', type = 'tsv')
     # generate nanostat summary
     make_summary_report(input_path = nanostat_path, output_path = nanostat_path, report = 'nanostat_postqc', type = 'txt')
+    # generate flye coverage report
+    make_flye_coverage_report(input_path = flye_path,output_path = flye_path)
     mult = multiqc_path
     auri = auriclass_path + 'auriclass_summary.tsv'
     nano = nanostat_path + 'nanostat_postqc_summary.tsv'
-    final = final_qc_summary(multiqc_path = mult, auriclass_path = auri, nanostat_path = nano)
+    fcov = flye_path + 'flye_coverage_summary.tsv'
+    final = final_qc_summary(multiqc_path = mult, auriclass_path = auri, nanostat_path = nano, flye_coverage_path = fcov)
     final_eval = qc_evaluate(
         final,n50_min=n50_min,contig_number_max=contig_number_max,contig_number_min=contig_number_min,assembly_length_max=assembly_length_max,assembly_length_min=assembly_length_min,
-        mean_read_length_min=mean_read_length_min, mean_read_quality_min=mean_read_quality_min,busco_n_score_min=busco_n_score_min
+        mean_read_length_min=mean_read_length_min, mean_read_quality_min=mean_read_quality_min,busco_n_score_min=busco_n_score_min,flye_coverage_min=flye_coverage_min
         )
     final_eval.to_csv(output_path, sep='\t',index=False)
 
@@ -210,6 +209,7 @@ if __name__ == "__main__":
     mult = snakemake.params["multiqc_dir"]
     auri = snakemake.params["auriclass_dir"]
     nano = snakemake.params["nanostat_dir"]
+    flye = snakemake.params["flye_dir"]
     outp = snakemake.output[0]
     n50_min = snakemake.config["min_n50"]
     contig_number_min = snakemake.config["min_contigs"]
@@ -221,8 +221,9 @@ if __name__ == "__main__":
     mean_read_length_min = snakemake.config["min_read_length"]
     mean_read_quality_min = snakemake.config["min_read_quality"]
     busco_n_score_min = snakemake.config["min_busco_nucl_score"]
+    flye_coverage_min = snakemake.config["min_average_coverage"]
     main(
-        multiqc_path=mult, auriclass_path=auri, nanostat_path=nano, output_path=outp, n50_min=n50_min, contig_number_max=contig_number_max, contig_number_min=contig_number_min, 
+        multiqc_path=mult, auriclass_path=auri, nanostat_path=nano, flye_path=flye, output_path=outp, n50_min=n50_min, contig_number_max=contig_number_max, contig_number_min=contig_number_min, 
         assembly_length_max=assembly_length_max, assembly_length_min=assembly_length_min, mean_read_length_min=mean_read_length_min, mean_read_quality_min=mean_read_quality_min, 
-        busco_n_score_min=busco_n_score_min
+        busco_n_score_min=busco_n_score_min, flye_coverage_min=flye_coverage_min
         )

@@ -566,15 +566,18 @@ rule qc_report_final:
         multiqc_report = "results/{prefix}/multiqc/{prefix}_QC_report.html",
         auriclass_report = expand("results/{prefix}/auriclass/{sample}/{sample}_report.tsv", sample = SAMPLE, prefix = PREFIX), 
         nanostat_report = expand("results/{prefix}/nanoplot/{sample}/{sample}_postqcNanoStats.txt", sample = SAMPLE, prefix = PREFIX),
+        flye_assembly = expand("results/{prefix}/flye/{sample}/{sample}_flye.fasta", sample = SAMPLE, prefix = PREFIX),
     output:
         summary_output = "results/{prefix}/multiqc/{prefix}_final_qc_summary.tsv"
     params:
         multiqc_dir = "results/{prefix}/multiqc/{prefix}_QC_report_data/",
         auriclass_dir = "results/{prefix}/auriclass/", 
         nanostat_dir = "results/{prefix}/nanoplot/",
+        flye_dir = "results/{prefix}/flye/",
+    threads: 1
     resources:
-        mem_mb = 2000,
-        runtime = 60,
+        mem_mb = 1000,
+        runtime = 30,
     script:
         "QC_summary.py"
     
