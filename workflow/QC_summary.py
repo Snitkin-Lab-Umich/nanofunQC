@@ -112,12 +112,6 @@ def final_qc_summary(multiqc_path,auriclass_path,nanostat_path,flye_coverage_pat
     # load coverage report
     data_flye_coverage = pd.read_csv(flye_coverage_path, sep = '\t', header = 0)
 
-    print(data_nanostat)
-    print(data_quast)
-    print(data_busco_merge)
-    print(data_auriclass)
-    print(data_flye_coverage)
-
     # merge everything on the sample column
     data_list = [data_nanostat, data_quast, data_busco_merge, data_auriclass,data_flye_coverage]
     data_merge = reduce(lambda left,right: pd.merge(left,right,on='Sample',how='inner'), data_list)
