@@ -161,7 +161,8 @@ rule medaka:
     threads: 6
     resources:
         mem_mb = 15000,
-        runtime = 30
+        #runtime = 30
+        runtime = lambda wildcards, attempt: 20 + ((attempt-1)*60) 
     #envmodules:
     #    "Bioinformatics",
     #    "medaka",
@@ -370,6 +371,10 @@ rule funannotate_train:
         funannotate train --input {input.masked_assembly} --out {params.out_dir} \
         --left {params.rna_data_r1} --right {params.rna_data_r2} --stranded RF \
         --jaccard_clip --species "Candida auris" --isolate {params.sample} --cpus {threads} --memory {params.mem_g}
+        rm -f {params.out_dir}training/left.fq.gz
+        rm -f {params.out_dir}training/right.fq.gz
+        rm -r -f {params.out_dir}training/trimmomatic/
+        rm -r -f {params.out_dir}training/trinity_gg/
         """
 
 # This should automatically detect the four training files generated previously, even without explicit input
