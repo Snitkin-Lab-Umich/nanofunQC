@@ -5,12 +5,12 @@
 samples: config/samples.csv
 
 # Change this to the absolute path of your nanopore long reads folder 
-long_reads: /nfs/turbo/umms-esnitkin/Project_Cauris/Sequence_data/ONT/2025_01_29_UM_ONT/raw_fastq
+long_reads: /nfs/turbo/umms-esnitkin/Project_Cauris/Sequence_data/ONT/2025_02_05_chicago_ONT/raw_fastq
 
 # Directory prefix where the outputs will be saved to
 # Rename this to your preferred naming convention 
 # with this format:year-month-day_Project_Name_nanoQC
-prefix: 2025-01-31_UM_ONT
+prefix: 2025-02-05_chicago_ONT
 
 # Change to genome size of your organism of interest
 genome_size: 12m
@@ -32,7 +32,7 @@ max_assembly_length: 13000000
 # min_fastqc_tests_passed: 7
 min_busco_nucl_score: 97
 min_n50: 500000
-min_read_length: 5000
+min_read_length: 4000
 min_read_quality: 15
 min_average_coverage: 10
 
