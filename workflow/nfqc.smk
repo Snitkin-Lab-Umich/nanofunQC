@@ -19,30 +19,31 @@ if not os.path.exists("results/"):
 
 rule all:
     input:
-        filtlong = expand("results/{prefix}/filtlong/{sample}/{sample}.trimmed.fastq.gz", sample=SAMPLE, prefix=PREFIX),
-	    nanoplot = expand("results/{prefix}/nanoplot/{sample}/{sample}_preqcNanoPlot-report.html", sample=SAMPLE, prefix=PREFIX),
-        flye_assembly = expand("results/{prefix}/flye/{sample}/{sample}_flye.fasta", sample=SAMPLE, prefix=PREFIX),
-        #flye_circ_assembly = expand("results/{prefix}/flye/{sample}/{sample}_flye_circ.fasta", sample=SAMPLE, prefix=PREFIX),
-        medaka = expand("results/{prefix}/medaka/{sample}/{sample}_medaka.fasta", sample=SAMPLE, prefix=PREFIX),
-        #prokka_out = expand("results/{prefix}/prokka/{sample}/{sample}_medaka.gff", sample=SAMPLE, prefix=PREFIX),
-        quast = expand("results/{prefix}/quast/{sample}/{sample}_flye/report.txt", sample=SAMPLE, prefix=PREFIX),
-        #busco_out = expand("results/{prefix}/busco/{sample}/{sample}.medaka/busco_medaka.txt", sample=SAMPLE, prefix=PREFIX),
-        #mlst_out = expand("results/{prefix}/mlst/{sample}/report.tsv", sample=SAMPLE, prefix=PREFIX),
-        #skani_out = expand("results/{prefix}/skani/{sample}/{sample}_skani_output.txt", sample=SAMPLE, prefix=PREFIX),
-        #nanoplot_report = expand("results/{prefix}/{prefix}_report/{prefix}_nanoplot_results.csv", sample=SAMPLE, prefix=PREFIX),
-        #summary_report = expand("results/{prefix}/{prefix}_report/{prefix}_report.csv", prefix=PREFIX)
-        funannotate_sort = expand("results/{prefix}/funannotate/{sample}/{sample}_sorted.fa", sample=SAMPLE, prefix=PREFIX),
-        repeatmasker = expand("results/{prefix}/repeatmasker/{sample}/{sample}_masked.fa", sample = SAMPLE, prefix = PREFIX),
-        funannotate_train = expand("results/{prefix}/funannotate/{sample}/training/funannotate_train.coordSorted.bam", sample=SAMPLE, prefix=PREFIX),
-        funannotate_predict = expand("results/{prefix}/funannotate/{sample}/predict_results/{sample}.proteins.fa", sample=SAMPLE, prefix=PREFIX),
-        funannotate_update = expand("results/{prefix}/funannotate/{sample}/update_results/{sample}.proteins.fa", sample=SAMPLE, prefix=PREFIX),        
-        interproscan = expand("results/{prefix}/funannotate/{sample}/interproscan/{sample}.proteins.fa.xml", sample=SAMPLE, prefix=PREFIX),
-        eggnog = expand("results/{prefix}/funannotate/{sample}/eggnog/{sample}.emapper.annotations", sample=SAMPLE, prefix=PREFIX),
-        funannotate_annotate = expand("results/{prefix}/funannotate/{sample}/annotate_results/{sample}.proteins.fa", sample=SAMPLE, prefix=PREFIX),
-        busco_final = expand("results/{prefix}/busco/busco_output_prot/batch_summary.txt", prefix = PREFIX),
-        multiqc_out = expand("results/{prefix}/multiqc/{prefix}_QC_report.html", prefix=PREFIX),
-        auriclass_report = expand("results/{prefix}/auriclass/{sample}/{sample}_report.tsv", sample=SAMPLE, prefix=PREFIX),
-        qc_report_final = expand("results/{prefix}/multiqc/{prefix}_final_qc_summary.tsv", prefix = PREFIX),
+        summary_output = expand("results/{prefix}/multiqc/{prefix}_final_qc_summary.tsv",prefix=PREFIX)
+        # filtlong = expand("results/{prefix}/filtlong/{sample}/{sample}.trimmed.fastq.gz", sample=SAMPLE, prefix=PREFIX),
+	    # nanoplot = expand("results/{prefix}/nanoplot/{sample}/{sample}_preqcNanoPlot-report.html", sample=SAMPLE, prefix=PREFIX),
+        # flye_assembly = expand("results/{prefix}/flye/{sample}/{sample}_flye.fasta", sample=SAMPLE, prefix=PREFIX),
+        # #flye_circ_assembly = expand("results/{prefix}/flye/{sample}/{sample}_flye_circ.fasta", sample=SAMPLE, prefix=PREFIX),
+        # medaka = expand("results/{prefix}/medaka/{sample}/{sample}_medaka.fasta", sample=SAMPLE, prefix=PREFIX),
+        # #prokka_out = expand("results/{prefix}/prokka/{sample}/{sample}_medaka.gff", sample=SAMPLE, prefix=PREFIX),
+        # quast = expand("results/{prefix}/quast/{sample}/{sample}_flye/report.txt", sample=SAMPLE, prefix=PREFIX),
+        # #busco_out = expand("results/{prefix}/busco/{sample}/{sample}.medaka/busco_medaka.txt", sample=SAMPLE, prefix=PREFIX),
+        # #mlst_out = expand("results/{prefix}/mlst/{sample}/report.tsv", sample=SAMPLE, prefix=PREFIX),
+        # #skani_out = expand("results/{prefix}/skani/{sample}/{sample}_skani_output.txt", sample=SAMPLE, prefix=PREFIX),
+        # #nanoplot_report = expand("results/{prefix}/{prefix}_report/{prefix}_nanoplot_results.csv", sample=SAMPLE, prefix=PREFIX),
+        # #summary_report = expand("results/{prefix}/{prefix}_report/{prefix}_report.csv", prefix=PREFIX)
+        # funannotate_sort = expand("results/{prefix}/funannotate/{sample}/{sample}_sorted.fa", sample=SAMPLE, prefix=PREFIX),
+        # repeatmasker = expand("results/{prefix}/repeatmasker/{sample}/{sample}_masked.fa", sample = SAMPLE, prefix = PREFIX),
+        # funannotate_train = expand("results/{prefix}/funannotate/{sample}/training/funannotate_train.coordSorted.bam", sample=SAMPLE, prefix=PREFIX),
+        # funannotate_predict = expand("results/{prefix}/funannotate/{sample}/predict_results/{sample}.proteins.fa", sample=SAMPLE, prefix=PREFIX),
+        # funannotate_update = expand("results/{prefix}/funannotate/{sample}/update_results/{sample}.proteins.fa", sample=SAMPLE, prefix=PREFIX),        
+        # interproscan = expand("results/{prefix}/funannotate/{sample}/interproscan/{sample}.proteins.fa.xml", sample=SAMPLE, prefix=PREFIX),
+        # eggnog = expand("results/{prefix}/funannotate/{sample}/eggnog/{sample}.emapper.annotations", sample=SAMPLE, prefix=PREFIX),
+        # funannotate_annotate = expand("results/{prefix}/funannotate/{sample}/annotate_results/{sample}.proteins.fa", sample=SAMPLE, prefix=PREFIX),
+        # busco_final = expand("results/{prefix}/busco/busco_output_prot/batch_summary.txt", prefix = PREFIX),
+        # multiqc_out = expand("results/{prefix}/multiqc/{prefix}_QC_report.html", prefix=PREFIX),
+        # auriclass_report = expand("results/{prefix}/auriclass/{sample}/{sample}_report.tsv", sample=SAMPLE, prefix=PREFIX),
+        # qc_report_final = expand("results/{prefix}/multiqc/{prefix}_final_qc_summary.tsv", prefix = PREFIX),
 
         
 rule filtlong:
@@ -74,7 +75,7 @@ rule nanoplot:
     #    "logs/{prefix}/nanoplot/{sample}/{sample}.log"
     params:
         outdir="results/{prefix}/nanoplot/{sample}",
-        sample="{sample}",
+        #sample="{sample}",
     singularity:
         "docker://staphb/nanoplot:1.42.0"
     #envmodules:
@@ -85,8 +86,8 @@ rule nanoplot:
         runtime = 30
     shell:
         """ 
-        NanoPlot -o {params.outdir} -p {params.sample}_preqc --tsv_stats --info_in_report --N50 --title {params.sample}_preqc --fastq {input.longreads} && 
-        NanoPlot -o {params.outdir} -p {params.sample}_postqc --tsv_stats --info_in_report --N50 --title {params.sample}_postqc --fastq {input.trimmed} 
+        NanoPlot -o {params.outdir} -p {wildcards.sample}_preqc --tsv_stats --info_in_report --N50 --title {wildcards.sample}_preqc --fastq {input.longreads} && 
+        NanoPlot -o {params.outdir} -p {wildcards.sample}_postqc --tsv_stats --info_in_report --N50 --title {wildcards.sample}_postqc --fastq {input.trimmed} 
         """
         # """
         # cat {input.longreads} > /tmp/{params.sample}.gz && 
@@ -104,7 +105,7 @@ rule flye_assembly:
         size = config["genome_size"],
         #threads = config["threads"],
         #flye_options = config["flye_options"],
-        sample = "{sample}",
+        #sample = "{sample}",
     #log:
     #    "logs/{prefix}/flye/{sample}/{sample}_flye.log" # Flye has its own log
     singularity:
@@ -119,7 +120,7 @@ rule flye_assembly:
     shell:   
         """
         flye --nano-hq {input.trimmed} -g {params.size} -o {params.assembly_dir} -t {threads} --debug && 
-        cp {params.assembly_dir}/assembly.fasta {params.assembly_dir}/{params.sample}_flye.fasta 
+        cp {params.assembly_dir}/assembly.fasta {params.assembly_dir}/{wildcards.sample}_flye.fasta 
         """
      
 # rule flye_add_circ:
@@ -153,7 +154,7 @@ rule medaka:
     params:
         medaka_out_dir = "results/{prefix}/medaka/{sample}",
         #threads = config["threads"],
-        sample = "{sample}",
+        #sample = "{sample}",
     #log:
     #    "logs/{prefix}/medaka/{sample}/{sample}.log"
     singularity:
@@ -170,7 +171,7 @@ rule medaka:
     shell:
         """
         medaka_consensus -i {input.trimmed} -d {input.flye_assembly} -o {params.medaka_out_dir} -t {threads} &&
-        cp {params.medaka_out_dir}/consensus.fasta {params.medaka_out_dir}/{params.sample}_medaka.fasta 
+        cp {params.medaka_out_dir}/consensus.fasta {params.medaka_out_dir}/{wildcards.sample}_medaka.fasta 
         """ 
         
 # rule prokka:
@@ -287,15 +288,13 @@ rule auriclass:
         medaka_out = "results/{prefix}/medaka/{sample}/{sample}_medaka.fasta",
     output:
         auriclass_report = "results/{prefix}/auriclass/{sample}/{sample}_report.tsv",
-    params: 
-        sample = "{sample}",
     resources:
         mem_mb = 5000,
         runtime = 30
     singularity:
         "docker://quay.io/biocontainers/auriclass:0.5.4--pyhdfd78af_0"
     shell:
-        "auriclass --name {params.sample} -o {output.auriclass_report} {input.medaka_out}"
+        "auriclass --name {wildcards.sample} -o {output.auriclass_report} {input.medaka_out}"
 
 
 rule funannotate_sort:
@@ -305,7 +304,7 @@ rule funannotate_sort:
         sorted_assembly = "results/{prefix}/funannotate/{sample}/{sample}_sorted.fa"
     params:
         out_dir = "results/{prefix}/funannotate/{sample}/",
-        sample = "{sample}"
+        #sample = "{sample}"
     singularity:
         "docker://nextgenusfs/funannotate:v1.8.17"
     resources:
@@ -313,8 +312,8 @@ rule funannotate_sort:
         runtime=60
     shell:
         """
-        funannotate clean -i {input.medaka_out} -o {params.out_dir}{params.sample}_cleaned.fa
-        funannotate sort -i {params.out_dir}{params.sample}_cleaned.fa -o {params.out_dir}{params.sample}_sorted.fa --minlen 0
+        funannotate clean -i {input.medaka_out} -o {params.out_dir}{wildcards.sample}_cleaned.fa
+        funannotate sort -i {params.out_dir}{wildcards.sample}_cleaned.fa -o {params.out_dir}{wildcards.sample}_sorted.fa --minlen 0
         """
 
 rule repeatmasker:
@@ -325,8 +324,8 @@ rule repeatmasker:
     params:
         out_dir = "results/{prefix}/repeatmasker/{sample}/",
         repeat_lib = config["funqcd_lib"] + "repeat_libraries/fungi_b8441/b8441_fungi_repeatlib.fa",
-        prefix = "{prefix}",
-        sample = "{sample}",
+        #prefix = "{prefix}",
+        #sample = "{sample}",
     threads: 8
     resources:
         mem_mb = 5000,
@@ -336,8 +335,8 @@ rule repeatmasker:
     shell:
         """
         RepeatMasker -xsmall -dir {params.out_dir} -lib {params.repeat_lib} \
-        results/{params.prefix}/funannotate/{params.sample}/{params.sample}_sorted.fa -pa {threads}
-        mv {params.out_dir}/{params.sample}_sorted.fa.masked {params.out_dir}/{params.sample}_masked.fa
+        results/{wildcards.prefix}/funannotate/{wildcards.sample}/{wildcards.sample}_sorted.fa -pa {threads}
+        mv {params.out_dir}/{wildcards.sample}_sorted.fa.masked {params.out_dir}/{wildcards.sample}_masked.fa
         """
 
 # this requires the RNA-seq data from Teresa, and assumes that the files are in a specific format
@@ -354,23 +353,23 @@ rule funannotate_train:
         funannotate_training_transc_align = "results/{prefix}/funannotate/{sample}/training/funannotate_train.transcripts.gff3",
     params:
         out_dir = "results/{prefix}/funannotate/{sample}/",
-        sample = "{sample}",
+        #sample = "{sample}",
         rna_data_r1 = ' '.join(sorted([config["funqcd_lib"] + 'rna_seq_data/' + x for x in os.listdir(config["funqcd_lib"] + 'rna_seq_data/') if '_R1_' in x and 'fastq.gz' in x])),
         rna_data_r2 = ' '.join(sorted([config["funqcd_lib"] + 'rna_seq_data/' + x for x in os.listdir(config["funqcd_lib"] + 'rna_seq_data/') if '_R2_' in x and 'fastq.gz' in x])),
         mem_g = "30G",
-        test = vars(workflow.resources)
+        #test = vars(workflow.resources)
     # threads: workflow.cores
     threads: 8
     resources:
         mem_mb = 32000,
-        runtime = 700
+        runtime = 780
     singularity:
         "docker://nextgenusfs/funannotate:v1.8.17"
     shell:
         """
         funannotate train --input {input.masked_assembly} --out {params.out_dir} \
         --left {params.rna_data_r1} --right {params.rna_data_r2} --stranded RF \
-        --jaccard_clip --species "Candida auris" --isolate {params.sample} --cpus {threads} --memory {params.mem_g}
+        --jaccard_clip --species "Candida auris" --isolate {wildcards.sample} --cpus {threads} --memory {params.mem_g}
         rm -f {params.out_dir}training/left.fq.gz
         rm -f {params.out_dir}training/right.fq.gz
         rm -r -f {params.out_dir}training/trimmomatic/
@@ -383,13 +382,13 @@ rule funannotate_predict:
     input:
         masked_assembly = "results/{prefix}/repeatmasker/{sample}/{sample}_masked.fa",
         funannotate_training_rna_bam = "results/{prefix}/funannotate/{sample}/training/funannotate_train.coordSorted.bam",
-        busco_db = config["funqcd_lib"] + "busco/lineages/saccharomycetes_odb10/dataset.cfg"
+        #busco_db = config["funqcd_lib"] + "busco/lineages/saccharomycetes_odb10/dataset.cfg"
     output:
         funannotate_predict_proteins = "results/{prefix}/funannotate/{sample}/predict_results/{sample}.proteins.fa",
-        funannotate_predict_out = directory("results/{prefix}/funannotate/{sample}/predict_results/")
+        #funannotate_predict_out = directory("results/{prefix}/funannotate/{sample}/predict_results/")
     params:
         out_dir = "results/{prefix}/funannotate/{sample}/",
-        sample = "{sample}",
+        #sample = "{sample}",
         genemark_path = config["funqcd_lib"] + "genemark/gmes_linux_64_4/",
     threads: 8
     resources:
@@ -398,11 +397,9 @@ rule funannotate_predict:
     singularity:
         "docker://nextgenusfs/funannotate:v1.8.17"
     shell:
-        # removed --species "Candida auris" --isolate {params.sample}
-        # consider changing output names and re-adding
         """
         funannotate predict --input {input.masked_assembly} --out {params.out_dir} \
-        --species {params.sample} --force \
+        --species {wildcards.sample} --force \
         --busco_seed_species candida_albicans --busco_db saccharomycetes_odb10 --cpus {threads} \
         --GENEMARK_PATH {params.genemark_path}
         """
@@ -412,10 +409,10 @@ rule funannotate_update:
         funannotate_predict_proteins = "results/{prefix}/funannotate/{sample}/predict_results/{sample}.proteins.fa"
     output:
         funannotate_update_proteins = "results/{prefix}/funannotate/{sample}/update_results/{sample}.proteins.fa",
-        funannotate_update_out = directory("results/{prefix}/funannotate/{sample}/update_results/")
+        #funannotate_update_out = directory("results/{prefix}/funannotate/{sample}/update_results/")
     params:
         out_dir = "results/{prefix}/funannotate/{sample}/",
-        sample = "{sample}"
+        #sample = "{sample}"
     threads: 8
     resources:
         mem_mb = 15000,
@@ -430,32 +427,34 @@ rule funannotate_update:
 
 rule interproscan:
     input:
-        interproscan_data = config["funqcd_lib"] + "interproscan_data/data/antifam/",
-        test_log = config["funqcd_lib"] + "interproscan_data/test_log.txt",
-        funannotate_predict_proteins = "results/{prefix}/funannotate/{sample}/predict_results/{sample}.proteins.fa"
+        funannotate_update_proteins = "results/{prefix}/funannotate/{sample}/update_results/{sample}.proteins.fa",
+        #interproscan_data = config["funqcd_lib"] + "interproscan_data/data/antifam/",
+        #test_log = config["funqcd_lib"] + "interproscan_data/test_log.txt",
+        #funannotate_predict_proteins = "results/{prefix}/funannotate/{sample}/predict_results/{sample}.proteins.fa"
     output:
         interproscan_out = "results/{prefix}/funannotate/{sample}/interproscan/{sample}.proteins.fa.xml"
     singularity:
         "docker://interpro/interproscan:5.71-102.0"
     params:
         out_dir = "results/{prefix}/funannotate/{sample}/interproscan/",
-        sample = "{sample}",
+        #sample = "{sample}",
         # cpus = config["ncores"]
     threads: 8
     resources:
         mem_mb = 15000,
-        runtime = 600
+        runtime = 360
     shell:
         """
-        bash /opt/interproscan/interproscan.sh --input {input.funannotate_predict_proteins} --output-dir {params.out_dir} \
+        bash /opt/interproscan/interproscan.sh --input {input.funannotate_update_proteins} --output-dir {params.out_dir} \
         --disable-precalc --cpu {threads}
         """
 
 
 rule eggnog:
     input:
-        eggnog_data = config["funqcd_lib"] + "eggnog_data/eggnog.db",
-        funannotate_predict_proteins = "results/{prefix}/funannotate/{sample}/predict_results/{sample}.proteins.fa"
+        funannotate_update_proteins = "results/{prefix}/funannotate/{sample}/update_results/{sample}.proteins.fa",
+        #eggnog_data = config["funqcd_lib"] + "eggnog_data/eggnog.db",
+        #funannotate_predict_proteins = "results/{prefix}/funannotate/{sample}/predict_results/{sample}.proteins.fa"
     output:
         eggnog_out = "results/{prefix}/funannotate/{sample}/eggnog/{sample}.emapper.annotations"
     singularity:
@@ -463,29 +462,31 @@ rule eggnog:
     params:
         eggnog_data_dir = config["funqcd_lib"] + "eggnog_data/",
         out_dir = "results/{prefix}/funannotate/{sample}/eggnog/",
-        sample = "{sample}"
+        #sample = "{sample}"
     threads: 8
     resources:
-        mem_mb = 15000,
-        runtime = 600
+        mem_mb = 10000,
+        runtime = 300,
     shell:
         """
-        emapper.py -i {input.funannotate_predict_proteins} --itype proteins --data_dir {params.eggnog_data_dir} -m diamond \
-        --output {params.sample} --output_dir {params.out_dir} --cpu {threads} --override
+        emapper.py -i {input.funannotate_update_proteins} --itype proteins --data_dir {params.eggnog_data_dir} -m diamond \
+        --output {wildcards.sample} --output_dir {params.out_dir} --cpu {threads} --override
         """
 
 rule funannotate_annotate:
     input:
-        funannotate_predict_out = "results/{prefix}/funannotate/{sample}/update_results/",
+        funannotate_update_proteins = "results/{prefix}/funannotate/{sample}/update_results/{sample}.proteins.fa",
+        #funannotate_predict_out = "results/{prefix}/funannotate/{sample}/update_results/",
         interproscan_out = "results/{prefix}/funannotate/{sample}/interproscan/{sample}.proteins.fa.xml",
         eggnog_out = "results/{prefix}/funannotate/{sample}/eggnog/{sample}.emapper.annotations",
-        busco_db = config["funqcd_lib"] + "busco/lineages/saccharomycetes_odb10/dataset.cfg"
+        #busco_db = config["funqcd_lib"] + "busco/lineages/saccharomycetes_odb10/dataset.cfg"
     output:
         funannotate_annotate_proteins = "results/{prefix}/funannotate/{sample}/annotate_results/{sample}.proteins.fa",
         funannotate_annotate_assembly = "results/{prefix}/funannotate/{sample}/annotate_results/{sample}.scaffolds.fa",
     params:
         out_dir = "results/{prefix}/funannotate/{sample}/",
-        sample = "{sample}",
+        funannotate_update_dir = "results/{prefix}/funannotate/{sample}/update_results/",
+        #sample = "{sample}",
         # cpus = config["ncores"]
     threads: 8
     resources:
@@ -495,7 +496,7 @@ rule funannotate_annotate:
         "docker://nextgenusfs/funannotate:v1.8.17"
     shell:
         """
-        funannotate annotate -i {input.funannotate_predict_out} -o {params.out_dir} --cpus {threads} \
+        funannotate annotate -i {params.funannotate_update_dir} -o {params.out_dir} --cpus {threads} \
         --iprscan {input.interproscan_out} --eggnog {input.eggnog_out} --busco_db saccharomycetes_odb10
         """
 
@@ -508,7 +509,7 @@ rule busco_final:
         busco_out_p = "results/{prefix}/busco/busco_output_prot/batch_summary.txt",
         busco_out_n = "results/{prefix}/busco/busco_output_nucl/batch_summary.txt",
     params:
-        prefix = "{prefix}",
+        #prefix = "{prefix}",
         busco_db = config["funqcd_lib"] + "busco/"
     threads: 8
     resources:
@@ -518,12 +519,12 @@ rule busco_final:
         "docker://ezlabgva/busco:v5.7.0_cv1"
     shell:
         """
-        mkdir -p results/{params.prefix}/busco/input/prot/
-        mkdir -p results/{params.prefix}/busco/input/nucl/
-        cp results/{params.prefix}/funannotate/*/annotate_results/*.proteins.fa results/{params.prefix}/busco/input/prot
-        cp results/{params.prefix}/funannotate/*/annotate_results/*.scaffolds.fa results/{params.prefix}/busco/input/nucl
-        busco -f --in results/{params.prefix}/busco/input/prot --mode protein --lineage_dataset saccharomycetes_odb10 --out_path results/{params.prefix}/busco/ -c {threads} --out busco_output_prot --offline --download_path {params.busco_db}
-        busco -f --in results/{params.prefix}/busco/input/nucl --mode genome --lineage_dataset saccharomycetes_odb10 --out_path results/{params.prefix}/busco/ -c {threads} --out busco_output_nucl --offline --download_path {params.busco_db}
+        mkdir -p results/{wildcards.prefix}/busco/input/prot/
+        mkdir -p results/{wildcards.prefix}/busco/input/nucl/
+        cp results/{wildcards.prefix}/funannotate/*/annotate_results/*.proteins.fa results/{wildcards.prefix}/busco/input/prot
+        cp results/{wildcards.prefix}/funannotate/*/annotate_results/*.scaffolds.fa results/{wildcards.prefix}/busco/input/nucl
+        busco -f --in results/{wildcards.prefix}/busco/input/prot --mode protein --lineage_dataset saccharomycetes_odb10 --out_path results/{wildcards.prefix}/busco/ -c {threads} --out busco_output_prot --offline --download_path {params.busco_db}
+        busco -f --in results/{wildcards.prefix}/busco/input/nucl --mode genome --lineage_dataset saccharomycetes_odb10 --out_path results/{wildcards.prefix}/busco/ -c {threads} --out busco_output_nucl --offline --download_path {params.busco_db}
         rm -rf RM_*
         """
 
