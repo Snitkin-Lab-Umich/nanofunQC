@@ -5,7 +5,7 @@
 samples: config/samples.csv
 
 # Change this to the absolute path of your nanopore long reads folder 
-long_reads: /nfs/turbo/umms-esnitkin/Project_Cauris/Sequence_data/ONT/2025_02_05_chicago_ONT/passed_qc_samples
+long_reads: /nfs/turbo/umms-esnitkin/Project_Cauris/Sequence_data/ONT/2025_01_29_UM_ONT/passed_qc_samples
 
 # Directory prefix where the outputs will be saved to
 # Rename this to your preferred naming convention 
